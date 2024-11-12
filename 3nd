@@ -1,0 +1,114 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void printMatrix(int **matrix, int rows, int cols) {
+    printf("Matrica:\n");
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            printf("%d ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+int isSaddlePoint(int **matrix, int rows, int cols, int i, int j) {
+    // Patikrinkite, ar elementas (i, j) yra balno taškas
+    int value = matrix[i][j];
+
+    // Patikriname, ar elementas yra mažiausias savo eilutėje ir didžiausias stulpelyje
+    int isMinInRow = 1, isMaxInCol = 1;
+    for (int k = 0; k < cols; k++) {
+        if (matrix[i][k] < value) {
+            isMinInRow = 0;
+            break;
+        }
+    }
+
+    for (int k = 0; k < rows; k++) {
+        if (matrix[k][j] > value) {
+            isMaxInCol = 0;
+            break;
+        }
+    }
+
+    // Patikriname, ar elementas yra didžiausias savo eilutėje ir mažiausias stulpelyje
+    int isMaxInRow = 1, isMinInCol = 1;
+    for (int k = 0; k < cols; k++) {
+        if (matrix[i][k] > value) {
+            isMaxInRow = 0;
+            break;
+        }
+    }
+
+    for (int k = 0; k < rows; k++) {
+        if (matrix[k][j] < value) {
+            isMinInCol = 0;
+            break;
+        }
+    }
+
+    // Jei elementas atitinka bent vieną iš sąlygų, jis yra balno taškas
+    return (isMinInRow && isMaxInCol) || (isMaxInRow && isMinInCol);
+}
+
+void findSaddlePoints(int **matrix, int rows, int cols) {
+    int found = 0;
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            if (isSaddlePoint(matrix, rows, cols, i, j)) {
+                printf("Balno taškas: %d, koordinatės: (%d, %d)\n", matrix[i][j], i, j);
+                found = 1;
+            }
+        }
+    }
+    if (!found) {
+        printf("Šioje matricoje nėra balno taškų.\n");
+    }
+}
+
+int main() {
+    FILE *file = fopen("masyvai.txt", "r");
+    if (!file) {
+        printf("Klaida atidarant failą!\n");
+        return 1;
+    }
+
+    int rows, cols;
+    while (fscanf(file, "%d %d", &rows, &cols) == 2) {
+        // Dinamiškai paskiriame atmintį matricai
+        int **matrix = (int **)malloc(rows * sizeof(int *));
+        for (int i = 0; i < rows; i++) {
+            matrix[i] = (int *)malloc(cols * sizeof(int));
+        }
+
+        // Nuskaitykite matricą iš failo
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                fscanf(file, "%d", &matrix[i][j]);
+            }
+        }
+
+        // Atspausdiname matricą
+        printMatrix(matrix, rows, cols);
+
+        // Ieškome balno taškų
+        findSaddlePoints(matrix, rows, cols);
+
+        // Išvalome atmintį
+        for (int i = 0; i < rows; i++) {
+            free(matrix[i]);
+        }
+        free(matrix);
+
+        // Paklauskite vartotojo, ar tęsti su kita matrica
+        char continueChoice;
+        printf("Ar norite tikrinti kitą matricą? (y/n): ");
+        scanf(" %c", &continueChoice);
+        if (continueChoice != 'y' && continueChoice != 'Y') {
+            break;
+        }
+    }
+
+    fclose(file);
+    return 0;
+}
